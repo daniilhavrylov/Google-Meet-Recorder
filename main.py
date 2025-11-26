@@ -1,32 +1,55 @@
-import asyncio
 import os
-from dotenv import load_dotenv
-from playwright.async_api import Page
+import time
 
-# from services.audio import record_to_file
+from dotenv import load_dotenv
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 from services.driver import Driver
 
 load_dotenv()
 
-async def connect_bot(driver):
+def data_tooltip_click(browser, key_word):
+    css_element = WebDriverWait(browser, 15).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-tooltip*='{key_word}']"))
+    )
+    css_element.click()
+
+def connect_bot(driver: Driver):
     invite_link = os.getenv('INVITE_LINK')
     bot_name = os.getenv('BOT_NAME')
-    page: Page = await driver.get_page(invite_link)
-    await page.wait_for_selector("//div[contains(@class, 'qdOxv-fmcmS-yrriRe')]//input[@id='c11']")
-    await page.keyboard.press('Control+d')
-    await page.keyboard.press('Control+e')
-    await page.fill("//div[contains(@class, 'qdOxv-fmcmS-yrriRe')]//input[@id='c11']",
-                    bot_name
-                    )
 
-async def main():
+    browser = driver.get_page("https://google.com")
+    time.sleep(5)
+    browser.get(invite_link)
+
+    webdriver_status = browser.execute_script("return navigator.webdriver")
+    if not webdriver_status:
+        time.sleep(5)
+        input_field = WebDriverWait(browser, 20).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text']"))
+        )
+        input_field.clear()
+        input_field.send_keys(bot_name)
+
+        data_tooltip_click(browser, 'camera')
+        data_tooltip_click(browser, 'microphone')
+        time.sleep(5)
+        join_button = WebDriverWait(browser, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Ask to join']]"))
+        )
+        join_button.click()
+        time.sleep(150)
+
+def main():
     driver = Driver()
     try:
-        await driver.start()
-        await connect_bot(driver)
-
+        driver.start()
+        connect_bot(driver)
     finally:
-        await driver.close()
+        driver.close()
 
-if __name__ == '__main__':
-    asyncio.run(main())
+
+if __name__ == "__main__":
+    main()
