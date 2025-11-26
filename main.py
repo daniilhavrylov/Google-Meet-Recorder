@@ -21,7 +21,7 @@ def connect_bot(driver: Driver):
     bot_name = os.getenv('BOT_NAME')
 
     browser = driver.get_page("https://google.com")
-    time.sleep(5)
+    time.sleep(2)
     browser.get(invite_link)
 
     webdriver_status = browser.execute_script("return navigator.webdriver")
@@ -40,7 +40,6 @@ def connect_bot(driver: Driver):
             EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Ask to join']]"))
         )
         join_button.click()
-        time.sleep(150)
 
 def main():
     driver = Driver()
