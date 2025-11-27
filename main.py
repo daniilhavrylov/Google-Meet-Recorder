@@ -2,10 +2,12 @@ import os
 import time
 
 from dotenv import load_dotenv
+from selenium.common import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+# from services.audio import record
 from services.driver import Driver
 
 load_dotenv()
@@ -15,6 +17,23 @@ def data_tooltip_click(browser, key_word):
         EC.element_to_be_clickable((By.CSS_SELECTOR, f"[data-tooltip*='{key_word}']"))
     )
     css_element.click()
+
+def check_join(browser):
+    try:
+        join_button = WebDriverWait(browser, 20).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Join now']]"))
+        )
+        join_button.click()
+        return True
+    except(TimeoutException, NoSuchElementException):
+        return False
+
+def end_detection(browser):
+    while True:
+        imgs = browser.find_elements(By.CSS_SELECTOR, "img.SOQwsf")
+        if len(imgs) < 2:
+            break
+        time.sleep(2)
 
 def connect_bot(driver: Driver):
     invite_link = os.getenv('INVITE_LINK')
@@ -36,10 +55,10 @@ def connect_bot(driver: Driver):
         data_tooltip_click(browser, 'camera')
         data_tooltip_click(browser, 'microphone')
         time.sleep(5)
-        join_button = WebDriverWait(browser, 20).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Ask to join']]"))
-        )
-        join_button.click()
+        if check_join(browser):
+            # record()
+            time.sleep(5)
+        end_detection(browser)
 
 def main():
     driver = Driver()
